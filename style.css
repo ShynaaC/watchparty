@@ -1,0 +1,246 @@
+/* *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    overflow:hidden;
+}
+
+canvas{
+    display:block;
+}
+
+
+#lobby-ui{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%,-50%);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    z-index: 100;
+}
+
+#lobby-ui h1{
+    font-size: 5rem;
+
+    background: linear-gradient(
+        90deg,
+        hotpink,
+        orange
+    );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+#enter-btn{
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    color: plum;
+    border-radius: 2px;
+} */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+
+html,
+body {
+width: 100%;
+height: 100%;
+overflow: hidden;
+font-family: Arial, Helvetica, sans-serif;
+background: #000;
+}
+
+/* Three.js Canvas */
+
+#experience-canvas {
+position: fixed;
+top: 0;
+left: 0;
+
+ 
+width: 100%;
+height: 100%;
+
+display: block;
+ 
+
+}
+
+/* Main Application */
+
+#app {
+position: fixed;
+top: 0;
+left: 0;
+
+ 
+width: 100%;
+height: 100%;
+
+pointer-events: none;
+ 
+
+}
+
+/* Landing Screen */
+
+#landing-screen {
+position: fixed;
+top: 0;
+left: 0;
+
+ 
+width: 100%;
+height: 100%;
+
+display: flex;
+justify-content: center;
+align-items: center;
+
+z-index: 10;
+
+background: rgba(0, 0, 0, 0.35);
+
+transition:
+    opacity 0.8s ease,
+    visibility 0.8s ease;
+ 
+
+}
+
+/* Landing Content */
+
+.landing-content {
+display: flex;
+flex-direction: column;
+
+
+align-items: center;
+text-align: center;
+
+color: white;
+
+
+}
+
+/* Title */
+
+.landing-content h1 {
+font-size: clamp(3rem, 8vw, 7rem);
+
+
+font-weight: 700;
+
+letter-spacing: 0.15em;
+
+margin-bottom: 20px;
+
+
+}
+
+/* Subtitle */
+
+.landing-content p {
+font-size: 1.2rem;
+
+
+letter-spacing: 0.1em;
+
+margin-bottom: 40px;
+
+opacity: 0.8;
+
+
+}
+
+/* Enter Button */
+
+#enter-theatre {
+padding: 15px 35px;
+
+
+border: 1px solid white;
+
+background: transparent;
+
+color: white;
+
+font-size: 1rem;
+
+letter-spacing: 0.15em;
+
+cursor: pointer;
+
+transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+
+
+}
+
+#enter-theatre:hover {
+background: white;
+
+
+color: black;
+
+transform: scale(1.05);
+
+
+}
+
+/* Hide Landing Screen */
+
+#landing-screen.hidden {
+opacity: 0;
+
+
+visibility: hidden;
+
+pointer-events: none;
+
+
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+
+.landing-content h1 {
+    font-size: 2.8rem;
+
+    letter-spacing: 0.08em;
+}
+
+.landing-content p {
+    font-size: 1rem;
+}
+
+#enter-theatre {
+    padding: 12px 25px;
+
+    font-size: 0.9rem;
+}
+
+
+}
