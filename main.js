@@ -1,7 +1,7 @@
 // WATCHPARTY MAIN.JS
 
 import * as THREE from 'three';
-import * as theatreScene from './put_scene/scene.js';
+import * as theatreScene from './scenes/scene_theatre.js';
 
 
 // ==========================================

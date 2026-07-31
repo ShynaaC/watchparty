@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-     <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
+    <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>watchparty</title>
   </head>
@@ -13,7 +13,7 @@
     <script type="module" src="/src/main.js"></script>
 
 </body>
-</html> --> 
+</html> --> -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +50,17 @@
 
     </div>
 
-    <div id="app"></div>
+    <div id="app"> <div id="room-code-display">
+        <!-- populated later once server assigns/joins a room -->
+    </div>
+
+    <div id="seat-prompt" class="hidden">
+        Click to sit
+    </div>
+
+    <button id="stand-up-btn" class="hidden">
+        Stand Up
+    </button></div>
 
     <script type="module" src="./main.js"></script>
 

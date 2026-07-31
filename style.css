@@ -241,6 +241,83 @@ pointer-events: none;
 
     font-size: 0.9rem;
 }
+/* Room Code (top-left HUD) */
 
+#room-code-display {
+position: fixed;
+top: 20px;
+left: 20px;
+
+color: white;
+font-size: 0.9rem;
+letter-spacing: 0.1em;
+opacity: 0.7;
+
+z-index: 20;
+}
+
+/* Seat Hover Prompt */
+
+#seat-prompt {
+position: fixed;
+
+padding: 8px 16px;
+
+background: rgba(0, 0, 0, 0.6);
+border: 1px solid white;
+
+color: white;
+font-size: 0.85rem;
+letter-spacing: 0.1em;
+
+pointer-events: none;
+
+transform: translate(-50%, -140%);
+
+transition: opacity 0.15s ease;
+
+z-index: 20;
+}
+
+/* Stand Up Button */
+
+#stand-up-btn {
+position: fixed;
+bottom: 30px;
+left: 50%;
+
+transform: translateX(-50%);
+
+padding: 12px 28px;
+
+border: 1px solid white;
+background: rgba(0, 0, 0, 0.5);
+
+color: white;
+font-size: 0.9rem;
+letter-spacing: 0.1em;
+
+cursor: pointer;
+pointer-events: auto;
+
+transition:
+    background 0.3s ease,
+    color 0.3s ease;
+
+z-index: 20;
+}
+
+#stand-up-btn:hover {
+background: white;
+color: black;
+}
+
+/* Shared hidden state */
+
+.hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+}
 
 }
