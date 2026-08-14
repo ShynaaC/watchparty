@@ -8,12 +8,12 @@ const MODEL_PATH = "./assets/popcorn.glb";
 const TWEEN_DURATION = 1.2;
 
 const OVERVIEW_CAMERA = {
-    position: [13, 44, 42],
+    position: [13, 44, -70],
     lookAt: [13, 25, -18]
 };
 
 // const SCREEN_CENTER = [13.5, 35, -54];
-const SCREEN_CENTER = [13.5, 35, -60];
+const SCREEN_CENTER = [13.5, 35, -70];
 
 const SEATS = [
     { id: "A1", position: [-1, 29, -12], lookAt: [-1, 34, -54] },
