@@ -13,18 +13,30 @@ const OVERVIEW_CAMERA = {
 };
 
 // const SCREEN_CENTER = [13.5, 35, -54];
-const SCREEN_CENTER = [13.5, 35, -70];
+const SCREEN_CENTER = [13.5, 35, -70]; //for screen pos
+//for seat sphere pos and camer pan on selection
+// const SEATS = [
+//     { id: "A1", position: [-1, 29, -12], cameraPosition: [-1, 40, -4], lookAt: [-1, 30, -54] },
+//     { id: "A2", position: [9, 29, -12], cameraPosition: [9, 27, -4], lookAt: [9, 40, -54] },
+//     { id: "A3", position: [19, 29, -12], cameraPosition: [19, 27, -4], lookAt: [19, 34, -54] },
+//     { id: "A4", position: [29, 29, -12], cameraPosition: [29, 27, -4],lookAt: [29, 34, -54] },
+//
+//  { id: "B1", position: [-1, 24, -26], cameraPosition: [-1, 25, -17], lookAt: [-1, 34, -44] },
+//     { id: "B2", position: [9, 24, -26], cameraPosition: [9, 25, -17], lookAt: [9, 34, -44] },
+//     { id: "B3", position: [19, 24, -26], cameraPosition: [19, 25, -17], lookAt: [19, 34, -44] },
+//     { id: "B4", position: [29, 24, -26], cameraPosition: [29, 25, -17], lookAt: [29, 34, -44] },
+// ];
 
 const SEATS = [
-    { id: "A1", position: [-1, 29, -12], lookAt: [-1, 34, -54] },
-    { id: "A2", position: [9, 29, -12], lookAt: [9, 34, -54] },
-    { id: "A3", position: [19, 29, -12], lookAt: [19, 34, -54] },
-    { id: "A4", position: [29, 29, -12], lookAt: [29, 34, -54] },
+    { id: "A1", position: [-1, 29, -12], cameraPosition: [-1, 34, -10], lookAt: [13.5, 32, -70] },
+    { id: "A2", position: [9, 29, -12], cameraPosition: [9, 31, -10], lookAt: [13.5, 32, -70] },
+    { id: "A3", position: [19, 29, -12], cameraPosition: [19, 31, -10], lookAt: [13.5, 32, -70] },
+    { id: "A4", position: [29, 29, -12], cameraPosition: [29, 34, -10],lookAt: [13.5, 32, -70] },
 
- { id: "B1", position: [-1, 24, -26], lookAt: [-1, 34, -44] },
-    { id: "B2", position: [9, 24, -26], lookAt: [9, 34, -44] },
-    { id: "B3", position: [19, 24, -26], lookAt: [19, 34, -44] },
-    { id: "B4", position: [29, 24, -26], lookAt: [29, 34, -44] },
+ { id: "B1", position: [-1, 24, -26], cameraPosition: [-1, 26, -21], lookAt: [13.5, 32, -70] },
+    { id: "B2", position: [9, 24, -26], cameraPosition: [9, 26, -21], lookAt: [13.5, 32, -70] },
+    { id: "B3", position: [19, 24, -26], cameraPosition: [19, 26, -21], lookAt: [13.5, 32, -70] },
+    { id: "B4", position: [29, 24, -26], cameraPosition: [29, 26, -21], lookAt: [13.5, 32, -70] },
 ];
 
 const canvas = document.getElementById("experience-canvas");
@@ -91,7 +103,7 @@ export function init({ renderer: sharedRenderer }) {
 
     seatUI = initSeatUI({
         onSit: (seat) => {
-            startTween(seat.position, seat.lookAt, false);
+            startTween(seat.cameraPosition, seat.lookAt, false);
             controls.enabled = false;
         },
         onStandUp: () => {
