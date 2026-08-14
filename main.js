@@ -144,6 +144,15 @@ window.addEventListener(
             )
         );
 
+        if (
+            currentScene &&
+            currentScene.resize
+        ) {
+
+            currentScene.resize();
+
+        }
+
     }
 );
 

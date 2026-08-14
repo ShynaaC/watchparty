@@ -1,68 +1,95 @@
-<!-- <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>watchparty</title>
-  </head>
- <body>
-
-    <canvas id="experience-canvas"></canvas>
-
-    <script type="module" src="/src/main.js"></script>
-
-</body>
-</html> --> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WatchParty</title>
-
     <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
-
     <canvas id="experience-canvas"></canvas>
 
-    <div id="landing-screen">
-
-        <div class="landing-content">
-
+    <section id="landing-screen" aria-label="Join a watch party">
+        <form class="landing-content" id="join-form">
+            <p class="eyebrow">Private theatre room</p>
             <h1>WATCH PARTY</h1>
 
-            <p>Step into the theatre.</p>
+            <label class="field">
+                <span>Your name</span>
+                <input
+                    id="display-name-input"
+                    maxlength="24"
+                    placeholder="Movie buddy"
+                    autocomplete="nickname"
+                >
+            </label>
 
-            <button id="enter-theatre">
-                ENTER THEATRE
+            <label class="field">
+                <span>Room key</span>
+                <input
+                    id="room-code-input"
+                    maxlength="12"
+                    placeholder="Leave empty to create"
+                    autocomplete="off"
+                >
+            </label>
+
+            <button id="enter-theatre" type="button">
+                Enter Theatre
             </button>
+        </form>
+    </section>
 
+    <main id="app" aria-label="Watch party controls">
+        <header id="room-hud">
+            <div>
+                <span class="label">Room</span>
+                <strong id="room-code-display">----</strong>
+            </div>
+            <div>
+                <span class="label">Guest</span>
+                <strong id="guest-name-display">Guest</strong>
+            </div>
+            <button id="copy-room-btn" type="button">Copy Key</button>
+        </header>
+
+        <section id="screen-controls" aria-label="Screen controls">
+            <button id="share-screen-btn" type="button">Share Screen</button>
+            <button id="stop-share-btn" class="hidden" type="button">Stop Share</button>
+        </section>
+
+        <section id="emote-bar" aria-label="Reactions">
+            <button type="button" data-emote="TOMATO">Tomato</button>
+            <button type="button" data-emote="LOL">LOL</button>
+            <button type="button" data-emote="WOW">Wow</button>
+            <button type="button" data-emote="CLAP">Clap</button>
+        </section>
+
+        <aside id="chat-panel" aria-label="Room chat">
+            <div id="chat-messages" aria-live="polite"></div>
+            <form id="chat-form">
+                <input
+                    id="chat-input"
+                    maxlength="160"
+                    placeholder="React to the scene..."
+                    autocomplete="off"
+                >
+                <button type="submit">Send</button>
+            </form>
+        </aside>
+
+        <div id="reaction-layer" aria-hidden="true"></div>
+
+        <div id="seat-prompt" class="hidden">
+            Click to sit
         </div>
 
-    </div>
-
-    <div id="app"> <div id="room-code-display">
-        <!-- populated later once server assigns/joins a room -->
-    </div>
-
-    <div id="seat-prompt" class="hidden">
-        Click to sit
-    </div>
-
-    <button id="stand-up-btn" class="hidden">
-        Stand Up
-    </button></div>
+        <button id="stand-up-btn" class="hidden" type="button">
+            Stand Up
+        </button>
+    </main>
 
     <script type="module" src="./main.js"></script>
-
 </body>
 </html>
