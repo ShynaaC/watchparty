@@ -6,6 +6,7 @@ import { initSeatUI } from "../ui/seats.js";
 
 const MODEL_PATH = "./assets/popcorn.glb";
 const TWEEN_DURATION = 1.2;
+const MOOD_LIGHT_SPEED = 0.018;
 
 const OVERVIEW_CAMERA = {
     position: [13, 44, -70],
@@ -39,6 +40,13 @@ const SEATS = [
     { id: "B4", position: [29, 24, -26], cameraPosition: [29, 26, -21], lookAt: [13.5, 32, -70] },
 ];
 
+const MOOD_LIGHTS = [
+    { position: [-20, 64, -24], target: [7, 24, -31], hue: 0.62, pulse: 0, intensity: 220 },
+    { position: [47, 64, -24], target: [20, 24, -31], hue: 0.57, pulse: 1.2, intensity: 205 },
+    { position: [13.5, 68, -8], target: [13.5, 27, -42], hue: 0.74, pulse: 2.4, intensity: 190 },
+    { position: [13.5, 58, -78], target: [13.5, 28, -18], hue: 0.9, pulse: 3.6, intensity: 170 }
+];
+
 const canvas = document.getElementById("experience-canvas");
 
 let renderer;
@@ -51,6 +59,7 @@ let mouse;
 let animationFrameId = null;
 
 let seatMeshes = [];
+let moodLights = [];
 let seatUI = null;
 let roomUI = null;
 
@@ -97,6 +106,7 @@ export function init({ renderer: sharedRenderer }) {
     mouse = new THREE.Vector2();
 
     addLighting();
+    addMoodLights();
     addScreen();
     addSeatHitboxes();
     loadTheatreModel();
@@ -132,10 +142,10 @@ export function resize() {
 }
 
 function addLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    const ambientLight = new THREE.AmbientLight(0x061226, 0.18);
     scene.add(ambientLight);
 
-    const frontLight = new THREE.DirectionalLight(0xffffff, 4);
+    const frontLight = new THREE.DirectionalLight(0x7f92c8, 1.15);
     frontLight.position.set(0, 80, -250);
     frontLight.target.position.set(0, 20, 0);
     frontLight.castShadow = true;
@@ -145,6 +155,37 @@ function addLighting() {
 
     scene.add(frontLight.target);
     scene.add(frontLight);
+}
+
+function addMoodLights() {
+    MOOD_LIGHTS.forEach((config) => {
+        const color = new THREE.Color().setHSL(config.hue, 0.7, 0.15);
+        const light = new THREE.SpotLight(
+            color,
+            config.intensity,
+            230,
+            Math.PI / 2.45,
+            0.9,
+            0.82
+        );
+        const target = new THREE.Object3D();
+
+        light.position.set(...config.position);
+        target.position.set(...config.target);
+        light.target = target;
+        light.castShadow = false;
+
+        scene.add(light);
+        scene.add(target);
+
+        moodLights.push({
+            light,
+            target,
+            baseHue: config.hue,
+            pulse: config.pulse,
+            baseIntensity: config.intensity
+        });
+    });
 }
 
 function addScreen() {
@@ -275,6 +316,7 @@ function animate() {
     animationFrameId = requestAnimationFrame(animate);
 
     const delta = clock.getDelta();
+    updateMoodLights(clock.elapsedTime);
 
     if (tweenActive) {
         updateTween(delta);
@@ -283,6 +325,17 @@ function animate() {
     }
 
     renderer.render(scene, camera);
+}
+
+function updateMoodLights(elapsedTime) {
+    moodLights.forEach(({ light, baseHue, pulse, baseIntensity }) => {
+        const hue = (baseHue + elapsedTime * MOOD_LIGHT_SPEED) % 1;
+        const brightness = 0.14 + Math.sin(elapsedTime * 0.9 + pulse) * 0.025;
+        const intensity = baseIntensity + Math.sin(elapsedTime * 0.8 + pulse) * 35;
+
+        light.color.setHSL(hue, 0.72, brightness);
+        light.intensity = intensity;
+    });
 }
 
 function startTween(toPos, toLook, enableControlsAtEnd) {
@@ -374,6 +427,7 @@ export function cleanup() {
     }
 
     seatMeshes = [];
+    moodLights = [];
     seatUI = null;
     roomUI = null;
     scene = null;

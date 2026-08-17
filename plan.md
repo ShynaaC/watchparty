@@ -5,4 +5,4 @@ features suggested by roomies
 3) text reaction temporary
 4) chat option
 5) screenshare
-6) volume ctrl and shit like gotta see there are modes for improving audio like styles or smthing idk the word for it rn.
+6) volume ctrl etc like gotta see if there are modes for improving audio like styles or smth.
