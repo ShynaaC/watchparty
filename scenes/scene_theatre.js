@@ -7,6 +7,8 @@ import { initSeatUI } from "../ui/seats.js";
 const MODEL_PATH = "./assets/popcorn.glb";
 const TWEEN_DURATION = 1.2;
 const MOOD_LIGHT_SPEED = 0.018;
+const CAMERA_MOVE_SPEED = 16;
+const CAMERA_ROTATE_SPEED = 1.25;
 
 const OVERVIEW_CAMERA = {
     position: [13, 44, -70],
@@ -47,7 +49,21 @@ const MOOD_LIGHTS = [
     { position: [13.5, 58, -78], target: [13.5, 28, -18], hue: 0.9, pulse: 3.6, intensity: 170 }
 ];
 
+const CAMERA_KEYS = new Set([
+    "KeyW",
+    "KeyA",
+    "KeyS",
+    "KeyD",
+    "KeyQ",
+    "KeyE",
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight"
+]);
+
 const canvas = document.getElementById("experience-canvas");
+const landingScreen = document.getElementById("landing-screen");
 
 let renderer;
 let scene;
@@ -60,6 +76,7 @@ let animationFrameId = null;
 
 let seatMeshes = [];
 let moodLights = [];
+let pressedKeys = new Set();
 let seatUI = null;
 let roomUI = null;
 
@@ -98,6 +115,11 @@ export function init({ renderer: sharedRenderer }) {
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.minDistance = 18;
+    controls.maxDistance = 96;
+    controls.minPolarAngle = 0.72;
+    controls.maxPolarAngle = 1.42;
     controls.target.set(...OVERVIEW_CAMERA.lookAt);
     controls.update();
 
@@ -107,6 +129,7 @@ export function init({ renderer: sharedRenderer }) {
 
     addLighting();
     addMoodLights();
+    addTheatreEnclosure();
     addScreen();
     addSeatHitboxes();
     loadTheatreModel();
@@ -128,6 +151,7 @@ export function init({ renderer: sharedRenderer }) {
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("click", onClick);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
 
     animate();
 }
@@ -186,6 +210,35 @@ function addMoodLights() {
             baseIntensity: config.intensity
         });
     });
+}
+
+function addTheatreEnclosure() {
+    const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x02050d,
+        roughness: 1,
+        metalness: 0,
+        side: THREE.DoubleSide
+    });
+
+    addWall("Screen Wall", [120, 92], [13.5, 34, -98], [0, 0, 0], wallMaterial);
+    addWall("Back Wall", [120, 92], [13.5, 34, 18], [0, 0, 0], wallMaterial);
+    addWall("Left Wall", [118, 92], [-38, 34, -40], [0, Math.PI / 2, 0], wallMaterial);
+    addWall("Right Wall", [118, 92], [65, 34, -40], [0, Math.PI / 2, 0], wallMaterial);
+    addWall("Ceiling", [120, 118], [13.5, 78, -40], [Math.PI / 2, 0, 0], wallMaterial);
+}
+
+function addWall(name, size, position, rotation, material) {
+    const wall = new THREE.Mesh(
+        new THREE.PlaneGeometry(...size),
+        material.clone()
+    );
+
+    wall.name = name;
+    wall.position.set(...position);
+    wall.rotation.set(...rotation);
+    wall.receiveShadow = true;
+
+    scene.add(wall);
 }
 
 function addScreen() {
@@ -304,12 +357,24 @@ function onClick() {
 }
 
 function onKeyDown(event) {
-    if (event.key !== "p") {
+    if (isTypingInField(event.target)) {
         return;
     }
 
-    console.log("position:", camera.position.toArray());
-    console.log("target:", controls.target.toArray());
+    if (event.key === "p") {
+        console.log("position:", camera.position.toArray());
+        console.log("target:", controls.target.toArray());
+        return;
+    }
+
+    if (CAMERA_KEYS.has(event.code)) {
+        event.preventDefault();
+        pressedKeys.add(event.code);
+    }
+}
+
+function onKeyUp(event) {
+    pressedKeys.delete(event.code);
 }
 
 function animate() {
@@ -321,10 +386,77 @@ function animate() {
     if (tweenActive) {
         updateTween(delta);
     } else {
+        updateKeyboardCamera(delta);
         controls.update();
     }
 
     renderer.render(scene, camera);
+}
+
+function updateKeyboardCamera(delta) {
+    if (
+        !controls.enabled ||
+        !landingScreen.classList.contains("hidden") ||
+        pressedKeys.size === 0
+    ) {
+        return;
+    }
+
+    const move = new THREE.Vector3();
+    const forward = new THREE.Vector3()
+        .subVectors(controls.target, camera.position)
+        .setY(0)
+        .normalize();
+    const right = new THREE.Vector3()
+        .crossVectors(forward, camera.up)
+        .normalize();
+
+    if (pressedKeys.has("KeyW") || pressedKeys.has("ArrowUp")) {
+        move.add(forward);
+    }
+
+    if (pressedKeys.has("KeyS") || pressedKeys.has("ArrowDown")) {
+        move.sub(forward);
+    }
+
+    if (pressedKeys.has("KeyD")) {
+        move.add(right);
+    }
+
+    if (pressedKeys.has("KeyA")) {
+        move.sub(right);
+    }
+
+    if (move.lengthSq() > 0) {
+        move.normalize().multiplyScalar(CAMERA_MOVE_SPEED * delta);
+        camera.position.add(move);
+        controls.target.add(move);
+    }
+
+    let rotation = 0;
+
+    if (pressedKeys.has("ArrowLeft") || pressedKeys.has("KeyQ")) {
+        rotation += CAMERA_ROTATE_SPEED * delta;
+    }
+
+    if (pressedKeys.has("ArrowRight") || pressedKeys.has("KeyE")) {
+        rotation -= CAMERA_ROTATE_SPEED * delta;
+    }
+
+    if (rotation !== 0) {
+        const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+        offset.applyAxisAngle(camera.up, rotation);
+        camera.position.copy(controls.target).add(offset);
+        camera.lookAt(controls.target);
+    }
+}
+
+function isTypingInField(target) {
+    return (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+    );
 }
 
 function updateMoodLights(elapsedTime) {
@@ -401,6 +533,7 @@ export function cleanup() {
     canvas.removeEventListener("mousemove", onMouseMove);
     canvas.removeEventListener("click", onClick);
     window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keyup", onKeyUp);
 
     seatUI?.cleanup();
     roomUI?.cleanup();
@@ -428,6 +561,7 @@ export function cleanup() {
 
     seatMeshes = [];
     moodLights = [];
+    pressedKeys = new Set();
     seatUI = null;
     roomUI = null;
     scene = null;
