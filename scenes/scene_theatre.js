@@ -15,8 +15,10 @@ const OVERVIEW_CAMERA = {
     lookAt: [13, 25, -18]
 };
 
-// const SCREEN_CENTER = [13.5, 35, -54];
-const SCREEN_CENTER = [13.5, 35, -70]; //for screen pos
+const SCREEN_CENTER = [13.5, 38, -76];
+const SCREEN_SIZE = [58, 32.625];
+const SCREEN_LOOK_AT = [13.5, 38, -76];
+const CAMERA_FOV = 36;
 //for seat sphere pos and camer pan on selection
 // const SEATS = [
 //     { id: "A1", position: [-1, 29, -12], cameraPosition: [-1, 40, -4], lookAt: [-1, 30, -54] },
@@ -31,15 +33,15 @@ const SCREEN_CENTER = [13.5, 35, -70]; //for screen pos
 // ];
 
 const SEATS = [
-    { id: "A1", position: [-1, 29, -12], cameraPosition: [-1, 34, -10], lookAt: [13.5, 32, -70] },
-    { id: "A2", position: [9, 29, -12], cameraPosition: [9, 31, -10], lookAt: [13.5, 32, -70] },
-    { id: "A3", position: [19, 29, -12], cameraPosition: [19, 31, -10], lookAt: [13.5, 32, -70] },
-    { id: "A4", position: [29, 29, -12], cameraPosition: [29, 34, -10],lookAt: [13.5, 32, -70] },
+    { id: "A1", position: [-1, 29, -12], cameraPosition: [7, 34, -9], lookAt: SCREEN_LOOK_AT },
+    { id: "A2", position: [9, 29, -12], cameraPosition: [11, 32, -9], lookAt: SCREEN_LOOK_AT },
+    { id: "A3", position: [19, 29, -12], cameraPosition: [16, 32, -9], lookAt: SCREEN_LOOK_AT },
+    { id: "A4", position: [29, 29, -12], cameraPosition: [20, 34, -9], lookAt: SCREEN_LOOK_AT },
 
- { id: "B1", position: [-1, 24, -26], cameraPosition: [-1, 26, -21], lookAt: [13.5, 32, -70] },
-    { id: "B2", position: [9, 24, -26], cameraPosition: [9, 26, -21], lookAt: [13.5, 32, -70] },
-    { id: "B3", position: [19, 24, -26], cameraPosition: [19, 26, -21], lookAt: [13.5, 32, -70] },
-    { id: "B4", position: [29, 24, -26], cameraPosition: [29, 26, -21], lookAt: [13.5, 32, -70] },
+    { id: "B1", position: [-1, 24, -26], cameraPosition: [7, 28, -20], lookAt: SCREEN_LOOK_AT },
+    { id: "B2", position: [9, 24, -26], cameraPosition: [11, 27, -20], lookAt: SCREEN_LOOK_AT },
+    { id: "B3", position: [19, 24, -26], cameraPosition: [16, 27, -20], lookAt: SCREEN_LOOK_AT },
+    { id: "B4", position: [29, 24, -26], cameraPosition: [20, 28, -20], lookAt: SCREEN_LOOK_AT },
 ];
 
 const MOOD_LIGHTS = [
@@ -105,7 +107,7 @@ export function init({ renderer: sharedRenderer }) {
     scene.background = new THREE.Color(0x111111);
 
     camera = new THREE.PerspectiveCamera(
-        45,
+        CAMERA_FOV,
         window.innerWidth / window.innerHeight,
         0.1,
         2000
@@ -136,7 +138,7 @@ export function init({ renderer: sharedRenderer }) {
 
     seatUI = initSeatUI({
         onSit: (seat) => {
-            startTween(seat.cameraPosition, seat.lookAt, false);
+            startTween(seat.cameraPosition, seat.lookAt, true);
             controls.enabled = false;
         },
         onStandUp: () => {
@@ -242,11 +244,12 @@ function addWall(name, size, position, rotation, material) {
 }
 
 function addScreen() {
-    const screenGeometry = new THREE.PlaneGeometry(34, 19);
+    const screenGeometry = new THREE.PlaneGeometry(...SCREEN_SIZE);
 
     screenMaterial = new THREE.MeshBasicMaterial({
         color: 0x000000,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        toneMapped: false
     });
 
     const screen = new THREE.Mesh(screenGeometry, screenMaterial);
@@ -325,6 +328,8 @@ function setScreenStream(stream) {
     screenTexture.colorSpace = THREE.SRGBColorSpace;
     screenTexture.minFilter = THREE.LinearFilter;
     screenTexture.magFilter = THREE.LinearFilter;
+    screenTexture.generateMipmaps = false;
+    screenTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
     screenMaterial.color.set(0xffffff);
     screenMaterial.map = screenTexture;
