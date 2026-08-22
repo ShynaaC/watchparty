@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { initPanelUI } from "../ui/panels.js";
 import { initRoomUI } from "../ui/room.js";
 import { initSeatUI } from "../ui/seats.js";
 
@@ -79,6 +80,7 @@ let animationFrameId = null;
 let seatMeshes = [];
 let moodLights = [];
 let pressedKeys = new Set();
+let panelUI = null;
 let seatUI = null;
 let roomUI = null;
 
@@ -149,6 +151,8 @@ export function init({ renderer: sharedRenderer }) {
     roomUI = initRoomUI({
         onScreenStream: setScreenStream
     });
+
+    panelUI = initPanelUI();
 
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("click", onClick);
@@ -542,6 +546,7 @@ export function cleanup() {
 
     seatUI?.cleanup();
     roomUI?.cleanup();
+    panelUI?.cleanup();
     disposeScreenTexture();
 
     controls?.dispose();
@@ -567,6 +572,7 @@ export function cleanup() {
     seatMeshes = [];
     moodLights = [];
     pressedKeys = new Set();
+    panelUI = null;
     seatUI = null;
     roomUI = null;
     scene = null;

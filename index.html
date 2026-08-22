@@ -53,7 +53,42 @@
             </div>
             <button id="copy-room-btn" type="button">Copy Key</button>
         </header>
+        <section id="panel-controls" aria-label="Panel controls">
+            <button
+                id="toggle-chat-btn"
+                class="panel-toggle"
+                type="button"
+                data-panel-target="chat-panel"
+                data-panel-name="chat"
+                aria-controls="chat-panel"
+                aria-expanded="true"
+                aria-label="Hide chat"
+                title="Hide chat"
+            >
+                <svg class="panel-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                </svg>
+                <span class="panel-toggle-slash" aria-hidden="true"></span>
+            </button>
 
+            <button
+                id="toggle-reactions-btn"
+                class="panel-toggle"
+                type="button"
+                data-panel-target="emote-bar"
+                data-panel-name="reactions"
+                aria-controls="emote-bar"
+                aria-expanded="true"
+                aria-label="Hide reactions"
+                title="Hide reactions"
+            >
+                <svg class="panel-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
+                </svg>
+                <span class="panel-toggle-slash" aria-hidden="true"></span>
+            </button>
+        </section>
         <section id="screen-controls" aria-label="Screen controls">
             <button id="share-screen-btn" type="button">Share Screen</button>
             <button id="stop-share-btn" class="hidden" type="button">Stop Share</button>
