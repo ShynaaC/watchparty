@@ -12,32 +12,39 @@
 
     <section id="landing-screen" aria-label="Join a watch party">
         <form class="landing-content" id="join-form">
-            <p class="eyebrow">Private theatre room</p>
-            <h1>WATCH PARTY</h1>
+            <div class="ticket-main">
+                <p class="eyebrow">Private theatre room</p>
+                <h1>WATCH PARTY</h1>
+                <p class="ticket-note">Admit one movie crew</p>
+            </div>
 
-            <label class="field">
-                <span>Your name</span>
-                <input
-                    id="display-name-input"
-                    maxlength="24"
-                    placeholder="Movie buddy"
-                    autocomplete="nickname"
-                >
-            </label>
+            <div class="ticket-stub">
+                <p class="stub-label">Entry Pass</p>
 
-            <label class="field">
-                <span>Room key</span>
-                <input
-                    id="room-code-input"
-                    maxlength="12"
-                    placeholder="Leave empty to create"
-                    autocomplete="off"
-                >
-            </label>
+                <label class="field">
+                    <span>Your name</span>
+                    <input
+                        id="display-name-input"
+                        maxlength="24"
+                        placeholder="Movie buddy"
+                        autocomplete="nickname"
+                    >
+                </label>
 
-            <button id="enter-theatre" type="button">
-                Enter Theatre
-            </button>
+                <label class="field">
+                    <span>Room key</span>
+                    <input
+                        id="room-code-input"
+                        maxlength="12"
+                        placeholder="Leave empty to create"
+                        autocomplete="off"
+                    >
+                </label>
+
+                <button id="enter-theatre" type="button">
+                    Enter Theatre
+                </button>
+            </div>
         </form>
     </section>
 
