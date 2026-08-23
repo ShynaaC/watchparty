@@ -95,10 +95,22 @@
         </section>
 
         <section id="emote-bar" aria-label="Reactions">
-            <button type="button" data-emote="TOMATO">Tomato</button>
-            <button type="button" data-emote="LOL">LOL</button>
-            <button type="button" data-emote="WOW">Wow</button>
-            <button type="button" data-emote="CLAP">Clap</button>
+            <button type="button" data-emote="TOMATO" data-symbol="🍅">
+                <span class="reaction-button-icon" aria-hidden="true">🍅</span>
+                <span class="reaction-button-label"></span>
+            </button>
+            <button type="button" data-emote="LOL" data-symbol="😂">
+                <span class="reaction-button-icon" aria-hidden="true">😂</span>
+                <span class="reaction-button-label"></span>
+            </button>
+            <button type="button" data-emote="WOW" data-symbol="😮">
+                <span class="reaction-button-icon" aria-hidden="true">😮</span>
+                <span class="reaction-button-label"></span>
+            </button>
+            <button type="button" data-emote="CLAP" data-symbol="👏">
+                <span class="reaction-button-icon" aria-hidden="true">👏</span>
+                <span class="reaction-button-label"></span>
+            </button>
         </section>
 
         <aside id="chat-panel" aria-label="Room chat">
@@ -120,9 +132,14 @@
             Click to sit
         </div>
 
-        <button id="stand-up-btn" class="hidden" type="button">
-            Stand Up
-        </button>
+        <section id="seat-actions" class="hidden" aria-label="Seat controls">
+            <button id="focus-screen-btn" type="button">
+                Focus Screen
+            </button>
+            <button id="stand-up-btn" type="button">
+                Stand Up
+            </button>
+        </section>
     </main>
 
     <script type="module" src="./main.js"></script>

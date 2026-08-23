@@ -20,6 +20,11 @@ const SCREEN_CENTER = [13.5, 38, -76];
 const SCREEN_SIZE = [58, 32.625];
 const SCREEN_LOOK_AT = [13.5, 38, -76];
 const CAMERA_FOV = 36;
+
+const FOCUS_SCREEN_CAMERA = {
+    position: [13.5, 38, -20],
+    lookAt: SCREEN_LOOK_AT
+};
 //for seat sphere pos and camer pan on selection
 // const SEATS = [
 //     { id: "A1", position: [-1, 29, -12], cameraPosition: [-1, 40, -4], lookAt: [-1, 30, -54] },
@@ -143,7 +148,20 @@ export function init({ renderer: sharedRenderer }) {
             startTween(seat.cameraPosition, seat.lookAt, true);
             controls.enabled = false;
         },
+        onFocusScreen: (isFocused, seat) => {
+            const cameraPosition = isFocused
+                ? FOCUS_SCREEN_CAMERA.position
+                : seat.cameraPosition;
+            const lookAt = isFocused
+                ? FOCUS_SCREEN_CAMERA.lookAt
+                : seat.lookAt;
+
+            pressedKeys.clear();
+            startTween(cameraPosition, lookAt, true);
+            controls.enabled = false;
+        },
         onStandUp: () => {
+            pressedKeys.clear();
             startTween(OVERVIEW_CAMERA.position, OVERVIEW_CAMERA.lookAt, true);
         }
     });

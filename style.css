@@ -308,6 +308,7 @@ input:focus {
 #share-screen-btn,
 #stop-share-btn,
 #chat-form button,
+#focus-screen-btn,
 #stand-up-btn,
 #emote-bar button {
     min-height: 38px;
@@ -345,7 +346,37 @@ input:focus {
 }
 
 #emote-bar button {
-    min-width: 72px;
+    display: flex;
+    min-width: 92px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-color: rgba(246, 242, 232, 0.2);
+    background: rgba(5, 5, 5, 0.72);
+    backdrop-filter: blur(12px);
+}
+
+#emote-bar button:hover {
+    border-color: rgba(240, 189, 87, 0.72);
+    background: rgba(240, 189, 87, 0.14);
+}
+
+.reaction-button-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.38));
+    transition: transform 160ms ease;
+}
+
+#emote-bar button:hover .reaction-button-icon {
+    transform: translateY(-1px) scale(1.14);
+}
+
+.reaction-button-label {
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 #chat-panel {
@@ -417,13 +448,17 @@ input:focus {
     position: absolute;
     left: var(--x);
     top: var(--y);
-    padding: 8px 12px;
+    display: grid;
+    width: 72px;
+    height: 72px;
+    place-items: center;
+    padding: 0;
     border: 1px solid rgba(246, 242, 232, 0.28);
-    border-radius: 999px;
-    background: rgba(5, 5, 5, 0.72);
-    color: #ffffff;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(246, 242, 232, 0.2), rgba(5, 5, 5, 0.68));
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.34);
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.38));
     animation: reaction-float 1.8s ease forwards;
 }
 
@@ -440,18 +475,28 @@ input:focus {
     transform: translate(-50%, -140%);
 }
 
-#stand-up-btn {
+#seat-actions {
     position: fixed;
     left: 50%;
     bottom: 88px;
     z-index: 22;
+    display: flex;
+    gap: 10px;
     transform: translateX(-50%);
+}
+
+#focus-screen-btn {
+    background: rgba(25, 105, 95, 0.88);
+    border-color: #2e9d8f;
+}
+
+#stand-up-btn {
     background: rgba(216, 74, 50, 0.86);
     border-color: #d84a32;
 }
 
-#stand-up-btn:active {
-    transform: translateX(-50%) translateY(1px);
+#seat-actions button:active {
+    transform: translateY(1px);
 }
 
 .hidden {
@@ -516,7 +561,7 @@ input:focus {
         padding: 0 8px;
     }
 
-    #stand-up-btn {
+    #seat-actions {
         bottom: 146px;
     }
 }

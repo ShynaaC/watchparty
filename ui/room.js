@@ -172,8 +172,11 @@ function handleEmoteClick(event) {
     }
 
     const emote = button.dataset.emote;
-    showReaction(emote);
-    addChatMessage(guestName, emote);
+    const symbol = button.dataset.symbol;
+    const label = button.querySelector(".reaction-button-label")?.textContent.trim() || emote;
+
+    showReaction(symbol, emote);
+    addChatMessage(guestName, `${symbol} ${label}`);
 }
 
 function addChatMessage(author, text) {
@@ -193,13 +196,14 @@ function addChatMessage(author, text) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function showReaction(emote) {
+function showReaction(symbol, emote) {
     const reaction = document.createElement("div");
     const x = 28 + Math.random() * 44;
     const y = 38 + Math.random() * 24;
 
     reaction.className = "reaction-pop";
-    reaction.textContent = emote;
+    reaction.dataset.emote = emote.toLowerCase();
+    reaction.textContent = symbol;
     reaction.style.setProperty("--x", `${x}%`);
     reaction.style.setProperty("--y", `${y}%`);
 
