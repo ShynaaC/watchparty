@@ -96,6 +96,7 @@ export function takeSeat(roomCode, socketId, seatId) {
     }
 
     const currentOccupant = room.seats[seatId];
+    const previousSeatId = member.seatId;
 
     if (currentOccupant && currentOccupant !== socketId) {
         return {
@@ -114,7 +115,9 @@ export function takeSeat(roomCode, socketId, seatId) {
 
     return {
         ok: true,
-        room
+        room,
+        changed: previousSeatId !== seatId,
+        memberName: member.name
     };
 }
 

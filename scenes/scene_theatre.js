@@ -385,7 +385,9 @@ function onMouseMove(event) {
     const seatIsAvailable = seat && (!occupantId || occupantId === socket.id);
 
     seatUI.setHoveredSeat(seatIsAvailable ? seat : null);
-    canvas.style.cursor = seatIsAvailable ? "pointer" : "default";
+    canvas.style.cursor = seat
+        ? (seatIsAvailable ? "pointer" : "not-allowed")
+        : "default";
 }
 
 function onClick() {
@@ -398,11 +400,7 @@ function onClick() {
 
     if (hits.length > 0) {
         const seat = hits[0].object.userData.seatData;
-        const occupantId = occupiedSeats.get(seat.id);
-
-        if (!occupantId || occupantId === socket.id) {
-            requestSeat(seat.id);
-        }
+        requestSeat(seat.id);
     }
 }
 

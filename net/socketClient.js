@@ -76,6 +76,14 @@ export function onSeatError(callback) {
     };
 }
 
+export function onSeatTaken(callback) {
+    socket.on("seat:taken", callback);
+
+    return () => {
+        socket.off("seat:taken", callback);
+    };
+}
+
 export function onReaction(callback) {
     socket.on("reaction:show", callback);
 

@@ -5,6 +5,7 @@ import socket, {
     onRoomState,
     onRoomJoinError,
     onSeatError,
+    onSeatTaken,
     sendChatMessage,
     sendReaction
 } from "../net/socketClient.js";
@@ -21,11 +22,16 @@ const guestNameDisplay = document.getElementById("guest-name-display");
 const copyRoomBtn = document.getElementById("copy-room-btn");
 const shareScreenBtn = document.getElementById("share-screen-btn");
 const stopShareBtn = document.getElementById("stop-share-btn");
+const shareCountdownControl = document.getElementById("share-countdown-control");
+const shareCountdownSelect = document.getElementById("share-countdown-select");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const chatMessages = document.getElementById("chat-messages");
 const emoteBar = document.getElementById("emote-bar");
 const reactionLayer = document.getElementById("reaction-layer");
+const notificationLayer = document.getElementById("notification-layer");
+const screenCountdown = document.getElementById("screen-countdown");
+const screenCountdownNumber = document.getElementById("screen-countdown-number");
 
 const ROOM_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -36,10 +42,14 @@ let onScreenStreamChange = () => {};
 let unsubscribeChatMessages = null;
 let unsubscribeRoomJoinErrors = null;
 let unsubscribeSeatErrors = null;
+let unsubscribeSeatTaken = null;
 let unsubscribeReactions = null;
 let unsubscribeRoomStates = null;
 let screenShare = null;
 let isHost = false;
+let screenShareStarting = false;
+let screenShareLive = false;
+let countdownTimer = null;
 
 export function initRoomUI({ onScreenStream }) {
     onScreenStreamChange = onScreenStream;
@@ -53,6 +63,12 @@ export function initRoomUI({ onScreenStream }) {
         onRemoteStop: () => {
             onScreenStreamChange(null);
             addChatMessage("System", "Screen share stopped.");
+        },
+        onCountdown: (countdown) => {
+            showScreenCountdown(countdown);
+            showNotification(
+                `${countdown.hostName} starts sharing in ${countdown.seconds} seconds.`
+            );
         },
         onError: (message) => {
             addChatMessage("System", message);
@@ -82,6 +98,7 @@ export function initRoomUI({ onScreenStream }) {
     unsubscribeChatMessages = onChatMessage(handleRemoteChatMessage);
     unsubscribeRoomJoinErrors = onRoomJoinError(handleRoomJoinError);
     unsubscribeSeatErrors = onSeatError(handleSeatError);
+    unsubscribeSeatTaken = onSeatTaken(handleSeatTaken);
     unsubscribeReactions = onReaction(handleRemoteReaction);
     unsubscribeRoomStates = onRoomState(handleRoomState);
     updateShareControls();
@@ -99,16 +116,19 @@ export function initRoomUI({ onScreenStream }) {
             unsubscribeChatMessages?.();
             unsubscribeRoomJoinErrors?.();
             unsubscribeSeatErrors?.();
+            unsubscribeSeatTaken?.();
             unsubscribeReactions?.();
             unsubscribeRoomStates?.();
             unsubscribeChatMessages = null;
             unsubscribeRoomJoinErrors = null;
             unsubscribeSeatErrors = null;
+            unsubscribeSeatTaken = null;
             unsubscribeReactions = null;
             unsubscribeRoomStates = null;
             stopScreenShare();
             screenShare?.cleanup();
             screenShare = null;
+            clearScreenCountdown();
             onScreenStreamChange(null);
         }
     };
@@ -156,6 +176,10 @@ async function handleCopyRoom() {
 }
 
 async function handleShareScreen() {
+    if (screenShareStarting || localScreenStream) {
+        return;
+    }
+
     if (!isHost) {
         addChatMessage("System", "Only the host can share the screen.");
         return;
@@ -166,8 +190,11 @@ async function handleShareScreen() {
         return;
     }
 
+    screenShareStarting = true;
+    updateShareControls();
+
     try {
-        localScreenStream = await navigator.mediaDevices.getDisplayMedia({
+        const stream = await navigator.mediaDevices.getDisplayMedia({
             video: {
                 width: {
                     ideal: 1920,
@@ -186,22 +213,49 @@ async function handleShareScreen() {
             audio: true
         });
 
-        await screenShare.startSharing(localScreenStream);
-        localScreenStream.getVideoTracks()[0]?.addEventListener("ended", stopScreenShare);
-        onScreenStreamChange(localScreenStream, { muted: true });
+        localScreenStream = stream;
         updateShareControls();
+        const videoTrack = stream.getVideoTracks()[0];
+        videoTrack?.addEventListener("ended", stopScreenShare, { once: true });
+
+        const countdownSeconds = Number(shareCountdownSelect.value);
+
+        if (countdownSeconds > 0) {
+            const countdown = await screenShare.startCountdown(countdownSeconds);
+            await waitUntil(countdown.endsAt);
+        }
+
+        if (localScreenStream !== stream || videoTrack?.readyState === "ended") {
+            return;
+        }
+
+        await screenShare.startSharing(stream);
+
+        if (localScreenStream !== stream) {
+            screenShare.stopSharing();
+            return;
+        }
+
+        screenShareLive = true;
+        onScreenStreamChange(stream, { muted: true });
         addChatMessage("System", "Screen share started.");
     } catch (error) {
         localScreenStream?.getTracks().forEach((track) => track.stop());
         localScreenStream = null;
-        updateShareControls();
 
         if (error.name !== "NotAllowedError") {
             addChatMessage(
                 "System",
                 error.message || "Could not start screen share."
             );
+            showNotification(
+                error.message || "Could not start screen share.",
+                "warning"
+            );
         }
+    } finally {
+        screenShareStarting = false;
+        updateShareControls();
     }
 }
 
@@ -211,7 +265,10 @@ function stopScreenShare() {
     }
 
     const stream = localScreenStream;
+    const wasLive = screenShareLive;
     localScreenStream = null;
+    screenShareStarting = false;
+    screenShareLive = false;
     screenShare?.stopSharing();
 
     stream.getTracks().forEach((track) => {
@@ -219,8 +276,12 @@ function stopScreenShare() {
     });
 
     onScreenStreamChange(null);
+    clearScreenCountdown();
     updateShareControls();
-    addChatMessage("System", "Screen share stopped.");
+    addChatMessage(
+        "System",
+        wasLive ? "Screen share stopped." : "Screen share cancelled."
+    );
 }
 
 function handleChatSubmit(event) {
@@ -246,7 +307,10 @@ function handleRoomState(room) {
 }
 
 function updateShareControls() {
-    shareScreenBtn.classList.toggle("hidden", !isHost || Boolean(localScreenStream));
+    const shareIsBusy = screenShareStarting || Boolean(localScreenStream);
+
+    shareCountdownControl.classList.toggle("hidden", !isHost || shareIsBusy);
+    shareScreenBtn.classList.toggle("hidden", !isHost || shareIsBusy);
     stopShareBtn.classList.toggle("hidden", !isHost || !localScreenStream);
 }
 
@@ -258,6 +322,11 @@ function handleRoomJoinError({ message }) {
 
 function handleSeatError({ message }) {
     addChatMessage("System", message);
+    showNotification(message, "warning");
+}
+
+function handleSeatTaken({ memberName, seatId }) {
+    showNotification(`${memberName} took seat ${seatId}.`);
 }
 
 function clearRoomError() {
@@ -317,6 +386,60 @@ function showReaction(symbol, label, author) {
     reaction.append(symbolEl, authorEl);
     reactionLayer.append(reaction);
     reaction.addEventListener("animationend", () => reaction.remove());
+}
+
+function showNotification(message, tone = "info") {
+    const notification = document.createElement("div");
+
+    notification.className = "room-notification";
+    notification.dataset.tone = tone;
+    notification.textContent = message;
+    notificationLayer.append(notification);
+
+    window.setTimeout(() => notification.remove(), 3200);
+}
+
+function showScreenCountdown({ seconds, startsAt, endsAt }) {
+    clearScreenCountdown();
+    screenCountdownNumber.textContent = seconds;
+    screenCountdown.classList.remove("hidden");
+
+    let previousNumber = null;
+
+    const updateCountdown = () => {
+        const now = Date.now();
+        const remaining = Math.ceil((endsAt - now) / 1000);
+
+        if (remaining <= 0) {
+            clearScreenCountdown();
+            return;
+        }
+
+        if (remaining !== previousNumber && now >= startsAt) {
+            previousNumber = Math.min(remaining, seconds);
+            screenCountdownNumber.textContent = previousNumber;
+            screenCountdownNumber.classList.remove("is-ticking");
+            void screenCountdownNumber.offsetWidth;
+            screenCountdownNumber.classList.add("is-ticking");
+        }
+
+        countdownTimer = window.setTimeout(updateCountdown, 80);
+    };
+
+    updateCountdown();
+}
+
+function clearScreenCountdown() {
+    window.clearTimeout(countdownTimer);
+    countdownTimer = null;
+    screenCountdown.classList.add("hidden");
+    screenCountdownNumber.classList.remove("is-ticking");
+}
+
+function waitUntil(timestamp) {
+    return new Promise((resolve) => {
+        window.setTimeout(resolve, Math.max(0, timestamp - Date.now()));
+    });
 }
 
 function createRoomCode() {

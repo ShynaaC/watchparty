@@ -97,6 +97,15 @@
             </button>
         </section>
         <section id="screen-controls" aria-label="Screen controls">
+            <label id="share-countdown-control" class="hidden">
+                <span>Countdown</span>
+                <select id="share-countdown-select" aria-label="Screen share countdown">
+                    <option value="0">Off</option>
+                    <option value="3" selected>3 sec</option>
+                    <option value="5">5 sec</option>
+                    <option value="10">10 sec</option>
+                </select>
+            </label>
             <button id="share-screen-btn" type="button">Share Screen</button>
             <button id="stop-share-btn" class="hidden" type="button">Stop Share</button>
         </section>
@@ -134,6 +143,14 @@
         </aside>
 
         <div id="reaction-layer" aria-hidden="true"></div>
+
+        <div id="notification-layer" aria-live="polite"></div>
+
+        <div id="screen-countdown" class="hidden" aria-live="assertive">
+            <div class="countdown-frame" aria-hidden="true">
+                <span id="screen-countdown-number">3</span>
+            </div>
+        </div>
 
         <div id="seat-prompt" class="hidden">
             Click to sit

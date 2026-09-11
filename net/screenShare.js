@@ -10,6 +10,7 @@ export function initScreenShare({
     onRemoteStream,
     onRemoteStart,
     onRemoteStop,
+    onCountdown,
     onError
 }) {
     const hostPeers = new Map();
@@ -89,6 +90,10 @@ export function initScreenShare({
         closeHostPeer(viewerId);
     };
 
+    const handleCountdown = (countdown) => {
+        onCountdown(countdown);
+    };
+
     const handleScreenStopped = ({ sharerId }) => {
         if (sharerId === socket.id) {
             closeHostPeers();
@@ -105,9 +110,34 @@ export function initScreenShare({
     socket.on("screen:answer", handleAnswer);
     socket.on("screen:ice", handleIceCandidate);
     socket.on("screen:viewer-left", handleViewerLeft);
+    socket.on("screen:countdown", handleCountdown);
     socket.on("screen:stopped", handleScreenStopped);
 
     return {
+        async startCountdown(seconds) {
+            return new Promise((resolve, reject) => {
+                socket.timeout(5000).emit(
+                    "screen:countdown",
+                    { seconds },
+                    (error, response) => {
+                        if (error) {
+                            reject(new Error("The server did not answer."));
+                            return;
+                        }
+
+                        if (!response?.ok) {
+                            reject(new Error(
+                                response?.message || "Could not start the countdown."
+                            ));
+                            return;
+                        }
+
+                        resolve(response);
+                    }
+                );
+            });
+        },
+
         async startSharing(stream) {
             localStream = stream;
 
@@ -154,6 +184,7 @@ export function initScreenShare({
             socket.off("screen:answer", handleAnswer);
             socket.off("screen:ice", handleIceCandidate);
             socket.off("screen:viewer-left", handleViewerLeft);
+            socket.off("screen:countdown", handleCountdown);
             socket.off("screen:stopped", handleScreenStopped);
         }
     };

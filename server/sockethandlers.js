@@ -98,6 +98,14 @@ export function registerSocketHandlers(io) {
             }
 
             io.to(roomCode).emit("room:state", result.room);
+
+            if (result.changed) {
+                io.to(roomCode).emit("seat:taken", {
+                    memberId: socket.id,
+                    memberName: result.memberName,
+                    seatId
+                });
+            }
         });
 
         socket.on("seat:stand", () => {
@@ -151,6 +159,34 @@ export function registerSocketHandlers(io) {
                     });
                 }
             });
+        });
+
+        socket.on("screen:countdown", ({ seconds } = {}, reply) => {
+            const respond = typeof reply === "function" ? reply : () => {};
+            const room = getRoom(socket.data.roomCode);
+            const duration = Number(seconds);
+
+            if (!room?.members[socket.id] || room.hostId !== socket.id) {
+                respond({ ok: false, message: "Only the host can start the countdown." });
+                return;
+            }
+
+            if (![3, 5, 10].includes(duration)) {
+                respond({ ok: false, message: "Choose a valid countdown length." });
+                return;
+            }
+
+            const startsAt = Date.now() + 250;
+            const endsAt = startsAt + duration * 1000;
+            const countdown = {
+                seconds: duration,
+                startsAt,
+                endsAt,
+                hostName: room.members[socket.id].name
+            };
+
+            respond({ ok: true, startsAt, endsAt });
+            io.to(room.code).emit("screen:countdown", countdown);
         });
 
         socket.on("screen:stop", () => {

@@ -443,6 +443,33 @@ input:focus {
     gap: 8px;
 }
 
+#share-countdown-control {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 9px;
+    border: 1px solid rgba(246, 242, 232, 0.32);
+    border-radius: 4px;
+    background: rgba(8, 8, 12, 0.86);
+    color: #fff4d6;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+#share-countdown-control.hidden {
+    display: none;
+}
+
+#share-countdown-select {
+    height: 28px;
+    border: 1px solid rgba(246, 242, 232, 0.28);
+    border-radius: 3px;
+    background: #17151b;
+    color: #ffffff;
+    font: inherit;
+}
+
 #share-screen-btn {
     background: #123f3b;
     border-color: var(--ui-teal);
@@ -588,6 +615,94 @@ input:focus {
     animation: reaction-float 1.8s ease forwards;
 }
 
+#notification-layer {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    z-index: 40;
+    display: grid;
+    width: min(360px, calc(100vw - 28px));
+    gap: 8px;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+.room-notification {
+    padding: 10px 13px;
+    border: 1px solid rgba(240, 189, 87, 0.5);
+    border-radius: 5px;
+    background: rgba(10, 9, 13, 0.94);
+    color: #fff4d6;
+    font-size: 0.8rem;
+    font-weight: 750;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+    animation: notification-in 180ms ease-out, notification-out 220ms ease-in 2.78s forwards;
+}
+
+.room-notification[data-tone="warning"] {
+    border-color: rgba(232, 87, 84, 0.72);
+    color: #ffe3e1;
+}
+
+#screen-countdown {
+    position: fixed;
+    inset: 0;
+    z-index: 34;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.72);
+    pointer-events: none;
+}
+
+#screen-countdown.hidden {
+    display: none;
+}
+
+.countdown-frame {
+    position: relative;
+    display: grid;
+    width: min(230px, 54vw);
+    aspect-ratio: 1;
+    place-items: center;
+    overflow: hidden;
+    border: 3px solid rgba(255, 244, 214, 0.78);
+    border-radius: 50%;
+    background: #171619;
+    box-shadow: 0 0 0 14px rgba(255, 244, 214, 0.08);
+}
+
+.countdown-frame::before,
+.countdown-frame::after {
+    position: absolute;
+    content: "";
+    background: rgba(255, 244, 214, 0.22);
+}
+
+.countdown-frame::before {
+    width: 100%;
+    height: 2px;
+}
+
+.countdown-frame::after {
+    width: 2px;
+    height: 100%;
+}
+
+#screen-countdown-number {
+    position: relative;
+    z-index: 1;
+    color: #fff4d6;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 8rem;
+    line-height: 1;
+    text-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45);
+}
+
+#screen-countdown-number.is-ticking {
+    animation: countdown-tick 820ms steps(6, end);
+}
+
 .reaction-pop-symbol {
     font-size: 2.7rem;
     line-height: 1;
@@ -665,6 +780,37 @@ input:focus {
     100% {
         opacity: 0;
         transform: translate(-50%, -120px) scale(1.12);
+    }
+}
+
+@keyframes notification-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes notification-out {
+    to {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes countdown-tick {
+    0% {
+        opacity: 0.42;
+        transform: scale(1.16) rotate(-2deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
     }
 }
 
