@@ -1,4 +1,7 @@
+import { joinRoom } from "../net/socketClient.js";
+
 const joinForm = document.getElementById("join-form");
+
 const landingScreen = document.getElementById("landing-screen");
 const displayNameInput = document.getElementById("display-name-input");
 const roomCodeInput = document.getElementById("room-code-input");
@@ -66,9 +69,9 @@ function handleJoin(event) {
 function enterRoom() {
     guestName = cleanDisplayName(displayNameInput.value);
     roomCode = cleanRoomCode(roomCodeInput.value) || createRoomCode();
-
+    
     localStorage.setItem("watchparty_guest_name", guestName);
-
+    
     roomCodeDisplay.textContent = roomCode;
     guestNameDisplay.textContent = guestName;
     roomCodeInput.value = roomCode;
@@ -79,6 +82,7 @@ function enterRoom() {
     window.history.replaceState({}, "", url);
 
     addChatMessage("System", `Joined private room ${roomCode}.`);
+    joinRoom(roomCode, guestName);
 }
 
 async function handleCopyRoom() {

@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { registerSocketHandlers } from "./socketHandlers.js";
 
 const app = express();
 const server = createServer(app);
@@ -17,13 +18,7 @@ app.get("/", (req, res) => {
     res.send("WatchParty backend is running!");
 });
 
-io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
-
-    socket.on("disconnect", () => {
-        console.log("A user disconnected:", socket.id);
-    });
-});
+registerSocketHandlers(io);
 
 server.listen(PORT, () => {
     console.log(`WatchParty server running on http://localhost:${PORT}`);

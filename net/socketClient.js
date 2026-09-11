@@ -10,4 +10,16 @@ socket.on("disconnect", () => {
     console.log("Disconnected from backend");
 });
 
+socket.on("room:state", (room) => {
+    console.log("Room state:", room);
+});
+
+export function joinRoom(roomCode, name) {
+    socket.emit("room:join", {
+        roomCode,
+        name
+    });
+}
+
+
 export default socket;
