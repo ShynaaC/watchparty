@@ -17,3 +17,9 @@ Think of it as the cozy middle ground between a video call and a cinema hall: yo
 ## Why It Exists
 
 Watching something together online can feel flat when everyone is just sitting in separate tabs. WatchParty adds a bit of place and personality back into it. The goal is not to be a giant streaming platform. The goal is to make a shared movie night feel more like an event.
+
+## Might do this (sm only if time for design)
+
+- Add spin the wheel to choose what to watch.
+- Add characters/avatars for members that take up seats.
+- Spotlight on the character
