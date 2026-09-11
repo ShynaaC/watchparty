@@ -31,6 +31,10 @@ export function sendChatMessage(text) {
     });
 }
 
+export function sendReaction(symbol) {
+    socket.emit("reaction:send", { symbol });
+}
+
 export function onChatMessage(callback) {
     socket.on("chat:message", callback);
 
@@ -60,6 +64,14 @@ export function onSeatError(callback) {
 
     return () => {
         socket.off("seat:error", callback);
+    };
+}
+
+export function onReaction(callback) {
+    socket.on("reaction:show", callback);
+
+    return () => {
+        socket.off("reaction:show", callback);
     };
 }
 

@@ -1,9 +1,11 @@
 import {
     joinRoom,
     onChatMessage,
+    onReaction,
     onRoomJoinError,
     onSeatError,
-    sendChatMessage
+    sendChatMessage,
+    sendReaction
 } from "../net/socketClient.js";
 
 const joinForm = document.getElementById("join-form");
@@ -32,6 +34,7 @@ let onScreenStreamChange = () => {};
 let unsubscribeChatMessages = null;
 let unsubscribeRoomJoinErrors = null;
 let unsubscribeSeatErrors = null;
+let unsubscribeReactions = null;
 
 export function initRoomUI({ onScreenStream }) {
     onScreenStreamChange = onScreenStream;
@@ -59,6 +62,7 @@ export function initRoomUI({ onScreenStream }) {
     unsubscribeChatMessages = onChatMessage(handleRemoteChatMessage);
     unsubscribeRoomJoinErrors = onRoomJoinError(handleRoomJoinError);
     unsubscribeSeatErrors = onSeatError(handleSeatError);
+    unsubscribeReactions = onReaction(handleRemoteReaction);
 
     return {
         cleanup() {
@@ -73,9 +77,11 @@ export function initRoomUI({ onScreenStream }) {
             unsubscribeChatMessages?.();
             unsubscribeRoomJoinErrors?.();
             unsubscribeSeatErrors?.();
+            unsubscribeReactions?.();
             unsubscribeChatMessages = null;
             unsubscribeRoomJoinErrors = null;
             unsubscribeSeatErrors = null;
+            unsubscribeReactions = null;
             stopScreenShare();
         }
     };
@@ -214,12 +220,14 @@ function handleEmoteClick(event) {
         return;
     }
 
-    const emote = button.dataset.emote;
     const symbol = button.dataset.symbol;
-    const label = button.querySelector(".reaction-button-label")?.textContent.trim() || emote;
 
-    showReaction(symbol, emote);
-    addChatMessage(guestName, `${symbol} ${label}`);
+    sendReaction(symbol);
+}
+
+function handleRemoteReaction(reaction) {
+    showReaction(reaction.symbol, reaction.label, reaction.author);
+    addChatMessage(reaction.author, `${reaction.symbol} ${reaction.label}`);
 }
 
 function addChatMessage(author, text) {
@@ -239,17 +247,23 @@ function addChatMessage(author, text) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function showReaction(symbol, emote) {
+function showReaction(symbol, label, author) {
     const reaction = document.createElement("div");
+    const symbolEl = document.createElement("span");
+    const authorEl = document.createElement("span");
     const x = 28 + Math.random() * 44;
     const y = 38 + Math.random() * 24;
 
     reaction.className = "reaction-pop";
-    reaction.dataset.emote = emote.toLowerCase();
-    reaction.textContent = symbol;
+    reaction.dataset.emote = label.toLowerCase();
+    symbolEl.className = "reaction-pop-symbol";
+    authorEl.className = "reaction-pop-author";
+    symbolEl.textContent = symbol;
+    authorEl.textContent = author;
     reaction.style.setProperty("--x", `${x}%`);
     reaction.style.setProperty("--y", `${y}%`);
 
+    reaction.append(symbolEl, authorEl);
     reactionLayer.append(reaction);
     reaction.addEventListener("animationend", () => reaction.remove());
 }

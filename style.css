@@ -574,18 +574,35 @@ input:focus {
     position: absolute;
     left: var(--x);
     top: var(--y);
-    display: grid;
-    width: 72px;
-    height: 72px;
-    place-items: center;
-    padding: 0;
+    display: flex;
+    min-width: 72px;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 10px 7px;
     border: 1px solid rgba(246, 242, 232, 0.28);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(246, 242, 232, 0.2), rgba(5, 5, 5, 0.68));
+    border-radius: 6px;
+    background: rgba(8, 8, 12, 0.78);
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.34);
-    font-size: 3rem;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.38));
     animation: reaction-float 1.8s ease forwards;
+}
+
+.reaction-pop-symbol {
+    font-size: 2.7rem;
+    line-height: 1;
+}
+
+.reaction-pop-author {
+    max-width: 110px;
+    overflow: hidden;
+    color: #fff4d6;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #seat-prompt {

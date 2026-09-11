@@ -1,6 +1,7 @@
 import {
     addMember,
     addMessage,
+    addReaction,
     createRoom,
     getRoom,
     leaveSeat,
@@ -87,6 +88,15 @@ export function registerSocketHandlers(io) {
 
             if (message) {
                 io.to(roomCode).emit("chat:message", message);
+            }
+        });
+
+        socket.on("reaction:send", ({ symbol } = {}) => {
+            const roomCode = socket.data.roomCode;
+            const reaction = addReaction(roomCode, socket.id, symbol);
+
+            if (reaction) {
+                io.to(roomCode).emit("reaction:show", reaction);
             }
         });
 

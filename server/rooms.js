@@ -7,6 +7,13 @@ export const SEAT_IDS = [
 
 export const MAX_MEMBERS = SEAT_IDS.length;
 
+const REACTION_LABELS = {
+    "🍅": "Tomato",
+    "😂": "LOL",
+    "😮": "Wow",
+    "👏": "Clap"
+};
+
 export function getRoom(roomCode) {
     return rooms[roomCode];
 }
@@ -178,4 +185,22 @@ export function addMessage(roomCode, socketId, text) {
     room.messages = room.messages.slice(-30);
 
     return message;
+}
+
+export function addReaction(roomCode, socketId, symbol) {
+    const room = getRoom(roomCode);
+    const member = room?.members[socketId];
+    const label = REACTION_LABELS[symbol];
+
+    if (!room || !member || !label) {
+        return null;
+    }
+
+    return {
+        id: `${Date.now()}-${socketId}`,
+        author: member.name,
+        symbol,
+        label,
+        sentAt: Date.now()
+    };
 }
