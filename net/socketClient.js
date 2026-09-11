@@ -10,10 +10,6 @@ socket.on("disconnect", () => {
     console.log("Disconnected from backend");
 });
 
-socket.on("room:state", (room) => {
-    console.log("Room state:", room);
-});
-
 export function joinRoom(roomCode, name) {
     socket.emit("room:join", {
         roomCode,
@@ -21,5 +17,50 @@ export function joinRoom(roomCode, name) {
     });
 }
 
+export function requestSeat(seatId) {
+    socket.emit("seat:sit", { seatId });
+}
+
+export function standUpFromSeat() {
+    socket.emit("seat:stand");
+}
+
+export function sendChatMessage(text) {
+    socket.emit("chat:send", {
+        text
+    });
+}
+
+export function onChatMessage(callback) {
+    socket.on("chat:message", callback);
+
+    return () => {
+        socket.off("chat:message", callback);
+    };
+}
+
+export function onRoomState(callback) {
+    socket.on("room:state", callback);
+
+    return () => {
+        socket.off("room:state", callback);
+    };
+}
+
+export function onRoomJoinError(callback) {
+    socket.on("room:join-error", callback);
+
+    return () => {
+        socket.off("room:join-error", callback);
+    };
+}
+
+export function onSeatError(callback) {
+    socket.on("seat:error", callback);
+
+    return () => {
+        socket.off("seat:error", callback);
+    };
+}
 
 export default socket;

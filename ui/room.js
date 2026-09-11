@@ -1,4 +1,10 @@
-import { joinRoom } from "../net/socketClient.js";
+import {
+    joinRoom,
+    onChatMessage,
+    onRoomJoinError,
+    onSeatError,
+    sendChatMessage
+} from "../net/socketClient.js";
 
 const joinForm = document.getElementById("join-form");
 
@@ -23,6 +29,9 @@ let guestName = "Guest";
 let roomCode = "";
 let localScreenStream = null;
 let onScreenStreamChange = () => {};
+let unsubscribeChatMessages = null;
+let unsubscribeRoomJoinErrors = null;
+let unsubscribeSeatErrors = null;
 
 export function initRoomUI({ onScreenStream }) {
     onScreenStreamChange = onScreenStream;
@@ -46,6 +55,10 @@ export function initRoomUI({ onScreenStream }) {
     stopShareBtn.addEventListener("click", stopScreenShare);
     chatForm.addEventListener("submit", handleChatSubmit);
     emoteBar.addEventListener("click", handleEmoteClick);
+    roomCodeInput.addEventListener("input", clearRoomError);
+    unsubscribeChatMessages = onChatMessage(handleRemoteChatMessage);
+    unsubscribeRoomJoinErrors = onRoomJoinError(handleRoomJoinError);
+    unsubscribeSeatErrors = onSeatError(handleSeatError);
 
     return {
         cleanup() {
@@ -56,6 +69,13 @@ export function initRoomUI({ onScreenStream }) {
             stopShareBtn.removeEventListener("click", stopScreenShare);
             chatForm.removeEventListener("submit", handleChatSubmit);
             emoteBar.removeEventListener("click", handleEmoteClick);
+            roomCodeInput.removeEventListener("input", clearRoomError);
+            unsubscribeChatMessages?.();
+            unsubscribeRoomJoinErrors?.();
+            unsubscribeSeatErrors?.();
+            unsubscribeChatMessages = null;
+            unsubscribeRoomJoinErrors = null;
+            unsubscribeSeatErrors = null;
             stopScreenShare();
         }
     };
@@ -67,6 +87,7 @@ function handleJoin(event) {
 }
 
 function enterRoom() {
+    clearRoomError();
     guestName = cleanDisplayName(displayNameInput.value);
     roomCode = cleanRoomCode(roomCodeInput.value) || createRoomCode();
     
@@ -164,8 +185,26 @@ function handleChatSubmit(event) {
         return;
     }
 
-    addChatMessage(guestName, message);
+    sendChatMessage(message);
     chatInput.value = "";
+}
+
+function handleRemoteChatMessage(message) {
+    addChatMessage(message.author, message.text);
+}
+
+function handleRoomJoinError({ message }) {
+    landingScreen.classList.remove("hidden");
+    roomCodeInput.setCustomValidity(message);
+    roomCodeInput.reportValidity();
+}
+
+function handleSeatError({ message }) {
+    addChatMessage("System", message);
+}
+
+function clearRoomError() {
+    roomCodeInput.setCustomValidity("");
 }
 
 function handleEmoteClick(event) {

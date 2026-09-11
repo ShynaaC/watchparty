@@ -53,6 +53,10 @@ export function initSeatUI({ onSit, onStandUp, onFocusScreen }) {
         },
 
         sitInSeat(seat) {
+            if (!seat || seatedSeat?.id === seat.id) {
+                return;
+            }
+
             seatedSeat = seat;
             screenFocused = false;
             hoveredSeat = null;
@@ -60,6 +64,19 @@ export function initSeatUI({ onSit, onStandUp, onFocusScreen }) {
             seatActions.classList.remove("hidden");
             updateFocusButton();
             onSit(seat);
+        },
+
+        getSeatedSeatId() {
+            return seatedSeat?.id || null;
+        },
+
+        clearSeat() {
+            seatedSeat = null;
+            hoveredSeat = null;
+            screenFocused = false;
+            seatPrompt.classList.add("hidden");
+            seatActions.classList.add("hidden");
+            updateFocusButton();
         },
 
         cleanup() {

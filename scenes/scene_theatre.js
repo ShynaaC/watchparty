@@ -4,6 +4,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { initPanelUI } from "../ui/panels.js";
 import { initRoomUI } from "../ui/room.js";
 import { initSeatUI } from "../ui/seats.js";
+import socket, {
+    onRoomState,
+    requestSeat,
+    standUpFromSeat
+} from "../net/socketClient.js";
 
 const MODEL_PATH = "./assets/popcorn.glb";
 const TWEEN_DURATION = 1.2;
@@ -88,6 +93,8 @@ let pressedKeys = new Set();
 let panelUI = null;
 let seatUI = null;
 let roomUI = null;
+let occupiedSeats = new Map();
+let unsubscribeRoomState = null;
 
 let screenMaterial = null;
 let screenTexture = null;
@@ -161,6 +168,7 @@ export function init({ renderer: sharedRenderer }) {
             controls.enabled = false;
         },
         onStandUp: () => {
+            standUpFromSeat();
             pressedKeys.clear();
             startTween(OVERVIEW_CAMERA.position, OVERVIEW_CAMERA.lookAt, true);
         }
@@ -169,6 +177,7 @@ export function init({ renderer: sharedRenderer }) {
     roomUI = initRoomUI({
         onScreenStream: setScreenStream
     });
+    unsubscribeRoomState = onRoomState(handleRoomState);
 
     panelUI = initPanelUI();
 
@@ -370,17 +379,66 @@ function onMouseMove(event) {
 
     raycaster.setFromCamera(mouse, camera);
     const hits = raycaster.intersectObjects(seatMeshes, false);
+    const seat = hits[0]?.object.userData.seatData || null;
+    const occupantId = seat ? occupiedSeats.get(seat.id) : null;
+    const seatIsAvailable = seat && (!occupantId || occupantId === socket.id);
 
-    seatUI.setHoveredSeat(hits[0]?.object.userData.seatData || null);
+    seatUI.setHoveredSeat(seatIsAvailable ? seat : null);
+    canvas.style.cursor = seatIsAvailable ? "pointer" : "default";
 }
 
 function onClick() {
+    if (seatUI.getSeatedSeatId()) {
+        return;
+    }
+
     raycaster.setFromCamera(mouse, camera);
     const hits = raycaster.intersectObjects(seatMeshes, false);
 
     if (hits.length > 0) {
-        seatUI.sitInSeat(hits[0].object.userData.seatData);
+        const seat = hits[0].object.userData.seatData;
+        const occupantId = occupiedSeats.get(seat.id);
+
+        if (!occupantId || occupantId === socket.id) {
+            requestSeat(seat.id);
+        }
     }
+}
+
+function handleRoomState(room) {
+    occupiedSeats = new Map(Object.entries(room?.seats || {}));
+    updateSeatHitboxes();
+
+    const mySeatId = room?.members?.[socket.id]?.seatId || null;
+    const currentSeatId = seatUI?.getSeatedSeatId();
+
+    if (mySeatId && mySeatId !== currentSeatId) {
+        const seat = SEATS.find((candidate) => candidate.id === mySeatId);
+
+        if (seat) {
+            seatUI.sitInSeat(seat);
+        }
+    } else if (!mySeatId && currentSeatId) {
+        seatUI.clearSeat();
+    }
+}
+
+function updateSeatHitboxes() {
+    seatMeshes.forEach((seatMesh) => {
+        const seatId = seatMesh.userData.seatData.id;
+        const occupantId = occupiedSeats.get(seatId);
+
+        if (!occupantId) {
+            seatMesh.material.color.setHex(0xf0bd57);
+            seatMesh.material.opacity = 0.32;
+        } else if (occupantId === socket.id) {
+            seatMesh.material.color.setHex(0x36c2a1);
+            seatMesh.material.opacity = 0.48;
+        } else {
+            seatMesh.material.color.setHex(0x8a2f3a);
+            seatMesh.material.opacity = 0.24;
+        }
+    });
 }
 
 function onKeyDown(event) {
@@ -565,6 +623,8 @@ export function cleanup() {
     seatUI?.cleanup();
     roomUI?.cleanup();
     panelUI?.cleanup();
+    unsubscribeRoomState?.();
+    unsubscribeRoomState = null;
     disposeScreenTexture();
 
     controls?.dispose();
@@ -588,6 +648,8 @@ export function cleanup() {
     }
 
     seatMeshes = [];
+    occupiedSeats = new Map();
+    canvas.style.cursor = "";
     moodLights = [];
     pressedKeys = new Set();
     panelUI = null;
