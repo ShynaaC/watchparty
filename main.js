@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import * as theatreScene from './scenes/scene_theatre.js';
-
+import "./net/socketClient.js";
 
 // ==========================================
 // CURRENT SCENE
