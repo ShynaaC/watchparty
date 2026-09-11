@@ -2,7 +2,9 @@ import {
     addMember,
     addMessage,
     addReaction,
+    beginScreenShare,
     createRoom,
+    endScreenShare,
     getRoom,
     leaveSeat,
     removeMember,
@@ -27,7 +29,23 @@ export function registerSocketHandlers(io) {
             const previousRoomCode = socket.data.roomCode;
 
             if (previousRoomCode && previousRoomCode !== roomCode) {
+                const activePreviousRoom = getRoom(previousRoomCode);
+                const previousSharerId = activePreviousRoom?.screenSharerId;
+                const wasPreviousSharer = previousSharerId === socket.id;
                 const previousRoom = removeMember(previousRoomCode, socket.id);
+
+                if (previousSharerId && !wasPreviousSharer) {
+                    io.to(previousSharerId).emit("screen:viewer-left", {
+                        viewerId: socket.id
+                    });
+                }
+
+                if (wasPreviousSharer) {
+                    io.to(previousRoomCode).emit("screen:stopped", {
+                        sharerId: socket.id
+                    });
+                }
+
                 socket.leave(previousRoomCode);
 
                 if (previousRoom) {
@@ -57,6 +75,15 @@ export function registerSocketHandlers(io) {
             socket.join(roomCode);
             socket.data.roomCode = roomCode;
             io.to(roomCode).emit("room:state", room);
+
+            if (room.screenSharerId && room.screenSharerId !== socket.id) {
+                socket.emit("screen:started", {
+                    sharerId: room.screenSharerId
+                });
+                io.to(room.screenSharerId).emit("screen:viewer-ready", {
+                    viewerId: socket.id
+                });
+            }
         });
 
         socket.on("seat:sit", ({ seatId } = {}) => {
@@ -100,9 +127,114 @@ export function registerSocketHandlers(io) {
             }
         });
 
+        socket.on("screen:start", (reply) => {
+            const respond = typeof reply === "function" ? reply : () => {};
+            const roomCode = socket.data.roomCode;
+            const result = beginScreenShare(roomCode, socket.id);
+
+            if (!result.ok) {
+                respond({ ok: false, message: result.message });
+                return;
+            }
+
+            const room = result.room;
+            respond({ ok: true });
+            io.to(roomCode).emit("room:state", room);
+            io.to(roomCode).emit("screen:started", {
+                sharerId: socket.id
+            });
+
+            Object.keys(room.members).forEach((memberId) => {
+                if (memberId !== socket.id) {
+                    socket.emit("screen:viewer-ready", {
+                        viewerId: memberId
+                    });
+                }
+            });
+        });
+
+        socket.on("screen:stop", () => {
+            const roomCode = socket.data.roomCode;
+            const room = endScreenShare(roomCode, socket.id);
+
+            if (room) {
+                io.to(roomCode).emit("room:state", room);
+                io.to(roomCode).emit("screen:stopped", {
+                    sharerId: socket.id
+                });
+            }
+        });
+
+        socket.on("screen:offer", ({ targetId, description } = {}) => {
+            const room = getRoom(socket.data.roomCode);
+
+            if (
+                room?.screenSharerId !== socket.id ||
+                !room.members[targetId] ||
+                targetId === socket.id ||
+                !description
+            ) {
+                return;
+            }
+
+            io.to(targetId).emit("screen:offer", {
+                sharerId: socket.id,
+                description
+            });
+        });
+
+        socket.on("screen:answer", ({ targetId, description } = {}) => {
+            const room = getRoom(socket.data.roomCode);
+
+            if (
+                !room?.members[socket.id] ||
+                room.screenSharerId !== targetId ||
+                !description
+            ) {
+                return;
+            }
+
+            io.to(targetId).emit("screen:answer", {
+                viewerId: socket.id,
+                description
+            });
+        });
+
+        socket.on("screen:ice", ({ targetId, candidate } = {}) => {
+            const room = getRoom(socket.data.roomCode);
+            const isValidPair = room && (
+                room.screenSharerId === socket.id ||
+                room.screenSharerId === targetId
+            );
+
+            if (!isValidPair || !room.members[targetId] || !candidate) {
+                return;
+            }
+
+            io.to(targetId).emit("screen:ice", {
+                fromId: socket.id,
+                candidate
+            });
+        });
+
         socket.on("disconnect", () => {
             const roomCode = socket.data.roomCode;
+            const activeRoom = getRoom(roomCode);
+            const sharerId = activeRoom?.screenSharerId;
+            const wasScreenSharer = sharerId === socket.id;
             const room = removeMember(roomCode, socket.id);
+
+            if (sharerId && !wasScreenSharer) {
+                io.to(sharerId).emit("screen:viewer-left", {
+                    viewerId: socket.id
+                });
+            }
+
+            if (wasScreenSharer) {
+                io.to(roomCode).emit("screen:stopped", {
+                    sharerId: socket.id
+                });
+            }
 
             if (room) {
                 io.to(roomCode).emit("room:state", room);

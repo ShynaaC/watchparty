@@ -31,6 +31,7 @@ export function createRoom(roomCode, hostId, hostName) {
             }
         },
         seats: {},
+        screenSharerId: null,
         messages: []
     };
 
@@ -133,6 +134,32 @@ export function leaveSeat(roomCode, socketId) {
     return room;
 }
 
+export function beginScreenShare(roomCode, socketId) {
+    const room = getRoom(roomCode);
+
+    if (!room || !room.members[socketId]) {
+        return { ok: false, message: "You are not inside this room." };
+    }
+
+    if (room.hostId !== socketId) {
+        return { ok: false, message: "Only the host can share the screen." };
+    }
+
+    room.screenSharerId = socketId;
+    return { ok: true, room };
+}
+
+export function endScreenShare(roomCode, socketId) {
+    const room = getRoom(roomCode);
+
+    if (!room || room.screenSharerId !== socketId) {
+        return null;
+    }
+
+    room.screenSharerId = null;
+    return room;
+}
+
 export function removeMember(roomCode, socketId) {
     const room = getRoom(roomCode);
     const member = room?.members[socketId];
@@ -143,6 +170,10 @@ export function removeMember(roomCode, socketId) {
 
     if (member.seatId) {
         delete room.seats[member.seatId];
+    }
+
+    if (room.screenSharerId === socketId) {
+        room.screenSharerId = null;
     }
 
     delete room.members[socketId];

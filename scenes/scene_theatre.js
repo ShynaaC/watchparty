@@ -339,7 +339,7 @@ function loadTheatreModel() {
     );
 }
 
-function setScreenStream(stream) {
+function setScreenStream(stream, { muted = true } = {}) {
     disposeScreenTexture();
 
     if (!stream) {
@@ -351,7 +351,8 @@ function setScreenStream(stream) {
 
     screenVideo = document.createElement("video");
     screenVideo.srcObject = stream;
-    screenVideo.muted = true;
+    screenVideo.muted = muted;
+    screenVideo.volume = 1;
     screenVideo.playsInline = true;
     screenVideo.autoplay = true;
 

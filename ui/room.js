@@ -1,12 +1,14 @@
-import {
+import socket, {
     joinRoom,
     onChatMessage,
     onReaction,
+    onRoomState,
     onRoomJoinError,
     onSeatError,
     sendChatMessage,
     sendReaction
 } from "../net/socketClient.js";
+import { initScreenShare } from "../net/screenShare.js";
 
 const joinForm = document.getElementById("join-form");
 
@@ -35,9 +37,27 @@ let unsubscribeChatMessages = null;
 let unsubscribeRoomJoinErrors = null;
 let unsubscribeSeatErrors = null;
 let unsubscribeReactions = null;
+let unsubscribeRoomStates = null;
+let screenShare = null;
+let isHost = false;
 
 export function initRoomUI({ onScreenStream }) {
     onScreenStreamChange = onScreenStream;
+    screenShare = initScreenShare({
+        onRemoteStart: () => {
+            addChatMessage("System", "The host started screen sharing.");
+        },
+        onRemoteStream: (stream) => {
+            onScreenStreamChange(stream, { muted: false });
+        },
+        onRemoteStop: () => {
+            onScreenStreamChange(null);
+            addChatMessage("System", "Screen share stopped.");
+        },
+        onError: (message) => {
+            addChatMessage("System", message);
+        }
+    });
 
     const params = new URLSearchParams(window.location.search);
     const requestedRoom = cleanRoomCode(params.get("room") || "");
@@ -63,6 +83,8 @@ export function initRoomUI({ onScreenStream }) {
     unsubscribeRoomJoinErrors = onRoomJoinError(handleRoomJoinError);
     unsubscribeSeatErrors = onSeatError(handleSeatError);
     unsubscribeReactions = onReaction(handleRemoteReaction);
+    unsubscribeRoomStates = onRoomState(handleRoomState);
+    updateShareControls();
 
     return {
         cleanup() {
@@ -78,11 +100,16 @@ export function initRoomUI({ onScreenStream }) {
             unsubscribeRoomJoinErrors?.();
             unsubscribeSeatErrors?.();
             unsubscribeReactions?.();
+            unsubscribeRoomStates?.();
             unsubscribeChatMessages = null;
             unsubscribeRoomJoinErrors = null;
             unsubscribeSeatErrors = null;
             unsubscribeReactions = null;
+            unsubscribeRoomStates = null;
             stopScreenShare();
+            screenShare?.cleanup();
+            screenShare = null;
+            onScreenStreamChange(null);
         }
     };
 }
@@ -129,6 +156,11 @@ async function handleCopyRoom() {
 }
 
 async function handleShareScreen() {
+    if (!isHost) {
+        addChatMessage("System", "Only the host can share the screen.");
+        return;
+    }
+
     if (!navigator.mediaDevices?.getDisplayMedia) {
         addChatMessage("System", "Screen sharing is not available in this browser.");
         return;
@@ -154,14 +186,21 @@ async function handleShareScreen() {
             audio: true
         });
 
+        await screenShare.startSharing(localScreenStream);
         localScreenStream.getVideoTracks()[0]?.addEventListener("ended", stopScreenShare);
-        onScreenStreamChange(localScreenStream);
-        shareScreenBtn.classList.add("hidden");
-        stopShareBtn.classList.remove("hidden");
+        onScreenStreamChange(localScreenStream, { muted: true });
+        updateShareControls();
         addChatMessage("System", "Screen share started.");
     } catch (error) {
+        localScreenStream?.getTracks().forEach((track) => track.stop());
+        localScreenStream = null;
+        updateShareControls();
+
         if (error.name !== "NotAllowedError") {
-            addChatMessage("System", "Could not start screen share.");
+            addChatMessage(
+                "System",
+                error.message || "Could not start screen share."
+            );
         }
     }
 }
@@ -171,14 +210,16 @@ function stopScreenShare() {
         return;
     }
 
-    localScreenStream.getTracks().forEach((track) => {
+    const stream = localScreenStream;
+    localScreenStream = null;
+    screenShare?.stopSharing();
+
+    stream.getTracks().forEach((track) => {
         track.stop();
     });
 
-    localScreenStream = null;
     onScreenStreamChange(null);
-    shareScreenBtn.classList.remove("hidden");
-    stopShareBtn.classList.add("hidden");
+    updateShareControls();
     addChatMessage("System", "Screen share stopped.");
 }
 
@@ -197,6 +238,16 @@ function handleChatSubmit(event) {
 
 function handleRemoteChatMessage(message) {
     addChatMessage(message.author, message.text);
+}
+
+function handleRoomState(room) {
+    isHost = room?.members?.[socket.id]?.role === "host";
+    updateShareControls();
+}
+
+function updateShareControls() {
+    shareScreenBtn.classList.toggle("hidden", !isHost || Boolean(localScreenStream));
+    stopShareBtn.classList.toggle("hidden", !isHost || !localScreenStream);
 }
 
 function handleRoomJoinError({ message }) {

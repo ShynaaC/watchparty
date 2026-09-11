@@ -1,9 +1,14 @@
 import { io } from "socket.io-client";
 
 const socket = io("http://localhost:3001");
+let activeRoom = null;
 
 socket.on("connect", () => {
     console.log("Connected to backend:", socket.id);
+
+    if (activeRoom) {
+        socket.emit("room:join", activeRoom);
+    }
 });
 
 socket.on("disconnect", () => {
@@ -11,10 +16,14 @@ socket.on("disconnect", () => {
 });
 
 export function joinRoom(roomCode, name) {
-    socket.emit("room:join", {
+    activeRoom = {
         roomCode,
         name
-    });
+    };
+
+    if (socket.connected) {
+        socket.emit("room:join", activeRoom);
+    }
 }
 
 export function requestSeat(seatId) {
